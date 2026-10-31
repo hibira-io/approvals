@@ -1,0 +1,589 @@
+/* Default look for @hibira-io/approvals components. Every color is a
+   variable on .hb-ap / .hb-ap-card, so restyling is a few overrides. Dark
+   mode follows prefers-color-scheme, or set data-theme="dark" / "light" on
+   any ancestor. */
+
+.hb-ap,
+.hb-ap-card {
+  --hb-ap-bg: #ffffff;
+  --hb-ap-surface: #fbfaf8;
+  --hb-ap-sunken: #f4f3f1;
+  --hb-ap-border: #e6e4df;
+  --hb-ap-ink: #111110;
+  --hb-ap-muted: #6f6d66;
+  --hb-ap-accent: #e5484d;
+  --hb-ap-approve: #218358;
+  --hb-ap-approve-soft: #e6f6eb;
+  --hb-ap-reject: #ce2c31;
+  --hb-ap-reject-soft: #feebec;
+  --hb-ap-edit: #8e4ec6;
+  --hb-ap-edit-soft: #f7edfe;
+  --hb-ap-wait: #ab6400;
+  --hb-ap-wait-soft: #fff7c2;
+  --hb-ap-radius: 12px;
+  --hb-ap-font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --hb-ap-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color: var(--hb-ap-ink);
+  font: 14px/1.45 var(--hb-ap-font);
+  box-sizing: border-box;
+}
+
+.hb-ap *,
+.hb-ap-card * {
+  box-sizing: border-box;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .hb-ap,
+  :root:not([data-theme='light']) .hb-ap-card {
+    --hb-ap-bg: #191918;
+    --hb-ap-surface: #111110;
+    --hb-ap-sunken: #222221;
+    --hb-ap-border: #3b3a37;
+    --hb-ap-ink: #eeeeec;
+    --hb-ap-muted: #a1a09a;
+    --hb-ap-accent: #ff6369;
+    --hb-ap-approve: #3dd68c;
+    --hb-ap-approve-soft: #132d21;
+    --hb-ap-reject: #ff9592;
+    --hb-ap-reject-soft: #3b1219;
+    --hb-ap-edit: #d19dff;
+    --hb-ap-edit-soft: #301c3b;
+    --hb-ap-wait: #ffca16;
+    --hb-ap-wait-soft: #302008;
+  }
+}
+
+[data-theme='dark'] .hb-ap,
+[data-theme='dark'] .hb-ap-card,
+.hb-ap[data-theme='dark'],
+.hb-ap-card[data-theme='dark'] {
+  --hb-ap-bg: #191918;
+  --hb-ap-surface: #111110;
+  --hb-ap-sunken: #222221;
+  --hb-ap-border: #3b3a37;
+  --hb-ap-ink: #eeeeec;
+  --hb-ap-muted: #a1a09a;
+  --hb-ap-accent: #ff6369;
+  --hb-ap-approve: #3dd68c;
+  --hb-ap-approve-soft: #132d21;
+  --hb-ap-reject: #ff9592;
+  --hb-ap-reject-soft: #3b1219;
+  --hb-ap-edit: #d19dff;
+  --hb-ap-edit-soft: #301c3b;
+  --hb-ap-wait: #ffca16;
+  --hb-ap-wait-soft: #302008;
+}
+
+/* Inbox */
+
+.hb-ap {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  background: var(--hb-ap-surface);
+  border: 1px solid var(--hb-ap-border);
+  border-radius: var(--hb-ap-radius);
+  overflow: hidden;
+}
+
+.hb-ap__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hb-ap-border);
+  background: var(--hb-ap-bg);
+}
+
+.hb-ap__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.hb-ap-tabs {
+  display: inline-flex;
+  margin-left: auto;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 9px;
+  background: var(--hb-ap-sunken);
+}
+
+.hb-ap-tab {
+  border: 0;
+  background: none;
+  color: var(--hb-ap-muted);
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.hb-ap-tab.is-active {
+  background: var(--hb-ap-bg);
+  color: var(--hb-ap-ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.hb-ap__body {
+  display: grid;
+  grid-template-columns: minmax(220px, 34%) 1fr;
+  flex: 1;
+  min-height: 0;
+}
+
+.hb-ap__list {
+  border-right: 1px solid var(--hb-ap-border);
+  overflow: auto;
+}
+
+.hb-ap__detail {
+  padding: 16px;
+  overflow: auto;
+}
+
+.hb-ap-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+}
+
+.hb-ap-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hb-ap-row:hover {
+  background: var(--hb-ap-sunken);
+}
+
+.hb-ap-row.is-active {
+  background: var(--hb-ap-bg);
+  box-shadow: inset 0 0 0 1px var(--hb-ap-border);
+}
+
+.hb-ap-row__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.hb-ap-row__text strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.hb-ap-card__title strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.hb-ap-card__title .hb-ap-muted,
+.hb-ap-row__text .hb-ap-muted {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hb-ap-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 48px 16px;
+  color: var(--hb-ap-muted);
+  text-align: center;
+}
+
+.hb-ap-empty .hb-ap-icon {
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--hb-ap-approve);
+  background: var(--hb-ap-approve-soft);
+}
+
+.hb-ap-pad {
+  padding: 16px;
+}
+
+@container (max-width: 620px) {
+  .hb-ap__body {
+    grid-template-columns: 1fr;
+  }
+  .hb-ap__list {
+    border-right: 0;
+  }
+  .hb-ap.is-open .hb-ap__list,
+  .hb-ap:not(.is-open) .hb-ap__detail {
+    display: none;
+  }
+  .hb-ap__detail {
+    padding: 12px;
+  }
+  .hb-ap__head {
+    flex-wrap: wrap;
+  }
+}
+
+@container (min-width: 621px) {
+  .hb-ap .hb-ap-btn--icon {
+    display: none;
+  }
+}
+
+/* Card */
+
+.hb-ap-card {
+  background: var(--hb-ap-bg);
+  border: 1px solid var(--hb-ap-border);
+  border-radius: var(--hb-ap-radius);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.hb-ap-card--empty {
+  padding: 24px;
+}
+
+.hb-ap-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--hb-ap-border);
+}
+
+.hb-ap-card__title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.hb-ap-agent {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--hb-ap-ink);
+  color: var(--hb-ap-bg);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hb-ap-muted {
+  color: var(--hb-ap-muted);
+  font-size: 12.5px;
+}
+
+.hb-ap-badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 550;
+  background: var(--hb-ap-sunken);
+  color: var(--hb-ap-muted);
+  white-space: nowrap;
+}
+
+.hb-ap-badge--pending,
+.hb-ap-badge--resuming {
+  background: var(--hb-ap-wait-soft);
+  color: var(--hb-ap-wait);
+}
+
+.hb-ap-badge--approved,
+.hb-ap-badge--resumed {
+  background: var(--hb-ap-approve-soft);
+  color: var(--hb-ap-approve);
+}
+
+.hb-ap-badge--rejected,
+.hb-ap-badge--failed {
+  background: var(--hb-ap-reject-soft);
+  color: var(--hb-ap-reject);
+}
+
+.hb-ap-calls {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hb-ap-call {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-left: 3px solid transparent;
+}
+
+.hb-ap-call + .hb-ap-call {
+  border-top: 1px solid var(--hb-ap-border);
+}
+
+.hb-ap-call.is-approve {
+  border-left-color: var(--hb-ap-approve);
+}
+
+.hb-ap-call.is-reject {
+  border-left-color: var(--hb-ap-reject);
+}
+
+.hb-ap-call.is-edit {
+  border-left-color: var(--hb-ap-edit);
+}
+
+.hb-ap-call__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hb-ap-call__tool {
+  font: 600 13px/1.3 var(--hb-ap-mono);
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--hb-ap-sunken);
+}
+
+.hb-ap-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+.hb-ap-chip--approve {
+  color: var(--hb-ap-approve);
+}
+
+.hb-ap-chip--reject {
+  color: var(--hb-ap-reject);
+}
+
+.hb-ap-chip--edit {
+  color: var(--hb-ap-edit);
+}
+
+.hb-ap-input,
+.hb-ap-textarea--code {
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 260px;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--hb-ap-surface);
+  border: 1px solid var(--hb-ap-border);
+  font: 12.5px/1.5 var(--hb-ap-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.hb-ap-textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--hb-ap-border);
+  border-radius: 8px;
+  background: var(--hb-ap-bg);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.hb-ap-textarea.hb-ap-textarea--code {
+  font: 12.5px/1.5 var(--hb-ap-mono);
+  background: var(--hb-ap-surface);
+  max-height: none;
+}
+
+.hb-ap-textarea:focus,
+.hb-ap-btn:focus-visible,
+.hb-ap-row:focus-visible,
+.hb-ap-tab:focus-visible {
+  outline: 2px solid var(--hb-ap-accent);
+  outline-offset: 1px;
+}
+
+.hb-ap-textarea.is-invalid {
+  border-color: var(--hb-ap-reject);
+}
+
+.hb-ap-reason {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--hb-ap-reject-soft);
+  color: var(--hb-ap-reject);
+  font-size: 13px;
+}
+
+.hb-ap-error {
+  margin: 0;
+  color: var(--hb-ap-reject);
+  font-size: 13px;
+}
+
+.hb-ap-card > .hb-ap-error {
+  padding: 0 16px 12px;
+}
+
+.hb-ap-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hb-ap-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--hb-ap-border);
+  background: var(--hb-ap-surface);
+  border-radius: 0 0 var(--hb-ap-radius) var(--hb-ap-radius);
+}
+
+.hb-ap-card__foot .hb-ap-actions {
+  margin-left: auto;
+}
+
+.hb-ap-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--hb-ap-border);
+  border-radius: 8px;
+  background: var(--hb-ap-bg);
+  color: var(--hb-ap-ink);
+  font: inherit;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.hb-ap-btn:hover:not(:disabled) {
+  background: var(--hb-ap-sunken);
+}
+
+.hb-ap-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.hb-ap-btn--primary {
+  border-color: transparent;
+  background: var(--hb-ap-approve);
+  color: #fff;
+}
+
+.hb-ap-btn--primary:hover:not(:disabled) {
+  background: var(--hb-ap-approve);
+  filter: brightness(1.08);
+}
+
+.hb-ap-btn--danger {
+  border-color: transparent;
+  background: var(--hb-ap-reject);
+  color: #fff;
+}
+
+.hb-ap-btn--danger:hover:not(:disabled) {
+  background: var(--hb-ap-reject);
+  filter: brightness(1.08);
+}
+
+.hb-ap-btn--danger-soft {
+  color: var(--hb-ap-reject);
+}
+
+.hb-ap-btn--icon {
+  min-height: 30px;
+  padding: 6px;
+  border-color: transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .hb-ap-btn--primary,
+  :root:not([data-theme='light']) .hb-ap-btn--danger {
+    color: #111110;
+  }
+}
+
+[data-theme='dark'] .hb-ap-btn--primary,
+[data-theme='dark'] .hb-ap-btn--danger {
+  color: #111110;
+}
+
+.hb-ap-icon {
+  flex: none;
+}
+
+.hb-ap-people {
+  display: flex;
+  flex: none;
+}
+
+.hb-ap-avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: -6px;
+  border: 2px solid var(--hb-ap-bg);
+  border-radius: 50%;
+  background: var(--hb-ap-accent);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  object-fit: cover;
+}
+
+.hb-ap-avatar:first-child {
+  margin-left: 0;
+}
+
+.hb-ap-avatar--more {
+  background: var(--hb-ap-sunken);
+  color: var(--hb-ap-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hb-ap-btn {
+    transition: none;
+  }
+}
