@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ["20", "22", "24"]
+        node: ["22", "24"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +23,18 @@ jobs:
       - run: npm run typecheck
       - name: Package contents
         run: npm pack --dry-run
+
+  # The package runs on Node 20; ai 7 and Mastra (dev dependencies for the
+  # adapter tests) need 22, so Node 20 runs the rest.
+  node20:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci --engine-strict=false
+      - run: node --test test/core.test.mjs test/handler.test.mjs test/components.test.mjs
 
   # Older React majors.
   react:
