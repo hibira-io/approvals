@@ -145,3 +145,19 @@ test('a broken pusher does not break the flow', async () => {
   assert.equal(r.status, 'pending');
   assert.equal(errors.length, 1);
 });
+
+test('a call may carry a preview for reviewers, kept out of the event', async () => {
+  const pusher = fakePusher();
+  const approvals = createApprovals({ pusher });
+  const r = await approvals.request({
+    calls: [
+      { id: 'a', tool: 'run_sql', input: { sql: 'DELETE FROM carts' }, preview: 'Estimated rows: 37' },
+      { id: 'b', tool: 'run_sql', input: { sql: 'DELETE FROM t' }, preview: 'x'.repeat(5000) },
+      { id: 'c', tool: 'send_email', input: {} },
+    ],
+  });
+  assert.equal(r.calls[0].preview, 'Estimated rows: 37');
+  assert.equal(r.calls[1].preview.length, 4000);
+  assert.ok(!('preview' in r.calls[2]));
+  assert.ok(!JSON.stringify(pusher.events[0].data).includes('Estimated'));
+});

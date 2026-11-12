@@ -24,3 +24,14 @@ async function flow() {
   return [role, v, i, list, handle, ApprovalInbox({ client }), ApprovalCard, useApprovalInbox, vue.ApprovalCard, resumeMastra];
 }
 void flow;
+
+import { classifySql, sqlFingerprint, sqlPreview, assertApprovedSql } from '@hibira-io/approvals/sql';
+
+async function sqlGate(sql: string): Promise<string> {
+  const kind: 'read' | 'write' = classifySql(sql);
+  const fingerprint: string = await sqlFingerprint(sql);
+  await assertApprovedSql(sql, fingerprint);
+  approval({ tool: 'run_sql', input: { sql }, preview: sqlPreview({ sql, rows: 3, fingerprint }) });
+  return kind;
+}
+void sqlGate;

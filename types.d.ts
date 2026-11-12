@@ -8,6 +8,8 @@ export interface ApprovalCall {
   id: string;
   tool: string;
   input: unknown;
+  /** What the call would do, shown to reviewers under the input (a dry run, estimated rows...). Display only. */
+  preview?: string | null;
   decision: Decision | null;
   edited_input: unknown;
   reason: string | null;
@@ -50,6 +52,8 @@ export interface CallInput {
   id?: string;
   tool: string;
   input?: unknown;
+  /** Shown to reviewers under the input, at most 4000 characters (a dry run, estimated rows, a plan). */
+  preview?: string;
 }
 
 export interface DecisionInput {

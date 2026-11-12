@@ -188,3 +188,26 @@ test('LangGraph interrupt(): two parallel approvals, one edited', async () => {
   await approvals.decide(r.id, { [refund.id]: { decision: 'edit', input: { order: 7 } }, [email.id]: { decision: 'reject', reason: 'later' } }, { send: true });
   assert.deepEqual(final.log.sort(), ['no email', 'refund 7']);
 });
+
+test('AI SDK: reads run at once, writes wait for a reviewer (classifySql)', async () => {
+  const { classifySql } = await import('../sql.js');
+  const ran = [];
+  const runSql = tool({
+    inputSchema: z.object({ sql: z.string() }),
+    needsApproval: async ({ sql }) => classifySql(sql) === 'write',
+    execute: async ({ sql }) => (ran.push(sql), { rows: 1 }),
+  });
+  const turn = (sql) => ({
+    content: [{ type: 'tool-call', toolCallId: 'tc1', toolName: 'run_sql', input: JSON.stringify({ sql }) }],
+    finishReason: { unified: 'tool-calls', raw: undefined },
+    usage,
+    warnings: [],
+  });
+  for (const [sql, paused] of [['SELECT count(*) FROM carts', false], ['DELETE FROM carts', true]]) {
+    let n = 0;
+    const model = new MockLanguageModelV3({ doGenerate: async () => (++n === 1 ? turn(sql) : textTurn('done')) });
+    const result = await generateText({ model, tools: { run_sql: runSql }, prompt: 'clean up', stopWhen: () => n >= 2 });
+    assert.equal(aiSdk.approvalCalls(result).length > 0, paused, sql);
+  }
+  assert.deepEqual(ran, ['SELECT count(*) FROM carts']);
+});

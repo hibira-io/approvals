@@ -16,13 +16,16 @@ INTERRUPT_TYPE = "hibira-approval"
 __all__ = ["INTERRUPT_TYPE", "approval", "approval_calls", "decision_for", "resume_value"]
 
 
-def approval(tool: str, input: Any = None, *, title: Optional[str] = None) -> dict:
+def approval(tool: str, input: Any = None, *, title: Optional[str] = None, preview: Optional[str] = None) -> dict:
     """The value to pass to ``interrupt()``. ``interrupt()`` then returns
     ``{"decision", "approved", "input", "reason"}``: ``input`` is the
-    reviewer's input for an edit and the original input otherwise."""
+    reviewer's input for an edit and the original input otherwise.
+    ``preview`` is shown to reviewers under the input (a dry run, estimated rows)."""
     value = {"type": INTERRUPT_TYPE, "tool": tool, "input": input}
     if title:
         value["title"] = title
+    if preview:
+        value["preview"] = preview
     return value
 
 
@@ -50,7 +53,10 @@ def approval_calls(source: Any) -> tuple[list[dict], Optional[str]]:
         iid = getattr(it, "id", None) if not isinstance(it, dict) else it.get("id")
         if not isinstance(value, dict) or value.get("type") != INTERRUPT_TYPE or not iid:
             continue
-        calls.append({"id": str(iid), "tool": value["tool"], "input": value.get("input")})
+        call = {"id": str(iid), "tool": value["tool"], "input": value.get("input")}
+        if value.get("preview"):
+            call["preview"] = value["preview"]
+        calls.append(call)
         title = title or value.get("title")
     return calls, title
 

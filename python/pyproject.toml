@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hibira-approvals"
-version = "0.1.0"
+version = "0.2.0"
 description = "Human approvals for AI agents over Hibira realtime channels: an approval inbox for LangGraph interrupts, with a FastAPI router for the React and Vue components"
 readme = "README.md"
 license = "MIT"

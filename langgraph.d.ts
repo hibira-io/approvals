@@ -7,6 +7,7 @@ export interface ApprovalInterrupt {
   tool: string;
   input: unknown;
   title?: string;
+  preview?: string;
 }
 
 /** What interrupt(approval(...)) returns when the graph resumes. */
@@ -17,9 +18,9 @@ export interface ApprovalDecision<I = unknown> {
   reason: string | null;
 }
 
-export declare function approval(call: { tool: string; input?: unknown; title?: string }): ApprovalInterrupt;
+export declare function approval(call: { tool: string; input?: unknown; title?: string; preview?: string }): ApprovalInterrupt;
 
-export declare function approvalCalls(source: unknown): { calls: { id: string; tool: string; input: unknown }[]; title: string | null };
+export declare function approvalCalls(source: unknown): { calls: { id: string; tool: string; input: unknown; preview?: string }[]; title: string | null };
 
 export declare function decisionFor(call: ApprovalCall): ApprovalDecision;
 

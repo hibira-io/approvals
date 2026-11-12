@@ -11,11 +11,18 @@ export const INTERRUPT_TYPE = 'hibira-approval';
  * The value to pass to interrupt(). interrupt() then returns
  * { decision, approved, input, reason }: `input` is the reviewer's input for
  * an edit and the original input otherwise.
- * @param {{ tool: string, input?: unknown, title?: string }} call
+ * `preview` is shown to reviewers under the input (a dry run, estimated rows).
+ * @param {{ tool: string, input?: unknown, title?: string, preview?: string }} call
  */
 export function approval(call) {
   if (!call || typeof call.tool !== 'string') throw new TypeError('approval() needs a tool name.');
-  return { type: INTERRUPT_TYPE, tool: call.tool, input: call.input ?? null, ...(call.title ? { title: call.title } : {}) };
+  return {
+    type: INTERRUPT_TYPE,
+    tool: call.tool,
+    input: call.input ?? null,
+    ...(call.title ? { title: call.title } : {}),
+    ...(call.preview ? { preview: call.preview } : {}),
+  };
 }
 
 /**
@@ -31,7 +38,7 @@ export function approvalCalls(source) {
   for (const it of list ?? []) {
     const v = it?.value;
     if (v?.type !== INTERRUPT_TYPE || !it.id) continue;
-    calls.push({ id: String(it.id), tool: v.tool, input: v.input ?? null });
+    calls.push({ id: String(it.id), tool: v.tool, input: v.input ?? null, ...(v.preview ? { preview: v.preview } : {}) });
   }
   const title = list?.find((it) => it?.value?.type === INTERRUPT_TYPE && it.value.title)?.value.title ?? null;
   return { calls, title };

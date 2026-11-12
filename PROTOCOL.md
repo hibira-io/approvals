@@ -113,6 +113,11 @@ same JSON comes out of PHP, Python and JavaScript backends.
 }
 ```
 
+A call may also carry `preview`: text shown to reviewers under its input,
+such as a dry run or the estimated rows of a SQL statement (at most 4000
+characters). It describes the original input, so clients hide it once a
+reviewer edits the call. Like the input, it never goes into the event.
+
 `metadata` is for the framework adapter (run id, thread id, interrupt ids) and
 is never shown to reviewers by the bundled components.
 

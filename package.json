@@ -1,6 +1,6 @@
 {
   "name": "@hibira-io/approvals",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Human approvals for AI agents over Hibira realtime channels: tool-call approval inbox for the Vercel AI SDK, Mastra and LangGraph, with React and Vue components",
   "keywords": [
     "ai",
@@ -17,7 +17,9 @@
     "vue",
     "pusher",
     "realtime",
-    "hibira"
+    "hibira",
+    "sql",
+    "database"
   ],
   "homepage": "https://hibira.io",
   "bugs": {
@@ -49,6 +51,10 @@
       "types": "./langgraph.d.ts",
       "default": "./langgraph.js"
     },
+    "./sql": {
+      "types": "./sql.d.ts",
+      "default": "./sql.js"
+    },
     "./client": {
       "types": "./client.d.ts",
       "default": "./client.js"
@@ -77,6 +83,8 @@
     "mastra.d.ts",
     "langgraph.js",
     "langgraph.d.ts",
+    "sql.js",
+    "sql.d.ts",
     "client.js",
     "client.d.ts",
     "inbox.js",

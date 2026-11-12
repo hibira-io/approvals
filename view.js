@@ -119,6 +119,10 @@ function callView(el, call, s, inbox, t) {
     );
   } else {
     body.push(el('pre', { class: 'hb-ap-input', 'aria-label': t.input }, JSON.stringify(shown ?? null, null, 2)));
+    // The preview describes the original input, so an edit hides it.
+    if (call.preview && call.decision !== 'edit') {
+      body.push(el('p', { class: 'hb-ap-preview-label' }, t.preview), el('pre', { class: 'hb-ap-input hb-ap-preview', 'aria-label': t.preview }, call.preview));
+    }
   }
 
   if (call.reason) body.push(el('p', { class: 'hb-ap-reason' }, call.reason));

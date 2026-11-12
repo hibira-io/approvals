@@ -13,6 +13,9 @@ else is looking, and the agent carries on where it stopped.
   (`interrupt()`), plus a framework-free core for anything else.
 - **React and Vue components**: an inbox and a single-request card, in seven
   languages, light and dark.
+- **Database write gates** (`@hibira-io/approvals/sql`): reads run, writes
+  wait for a reviewer with the exact statement, estimated rows and a
+  fingerprint, so approving one statement never runs another.
 - **One protocol** ([PROTOCOL.md](PROTOCOL.md)) shared with the
   [Python package](python/) (LangGraph Python + FastAPI),
   [filament-approvals](https://github.com/hibira-io/filament-approvals)
@@ -194,6 +197,171 @@ const resume = (request) =>
 ```
 
 For LangGraph in Python, see [`python/`](python/).
+
+## Gate database writes
+
+Let an agent query your database freely but stop before it changes
+anything. `@hibira-io/approvals/sql` sorts each statement into a read or a
+write; reads run at once, writes wait for a reviewer, who sees the exact
+statement and a preview of what it will touch:
+
+- `classifySql(sql)` returns `'read'` or `'write'`. Several statements,
+  data-modifying CTEs, `EXPLAIN ANALYZE`, `SELECT ... INTO`, `FOR UPDATE` and
+  anything it cannot parse for sure count as writes. It is a convenience,
+  not a security boundary: run reads on a read-only connection or in a
+  `READ ONLY` transaction, so a statement it misjudges fails instead of
+  writing.
+- `sqlFingerprint(sql)` is the SHA-256 of the exact text, and
+  `assertApprovedSql(sql, fingerprint)` throws unless the statement about to
+  run is that one. Store the fingerprint with the request and check it right
+  before running, so approving A can never run B.
+- `sqlPreview({ sql, rows, plan, fingerprint })` is the text reviewers see.
+  Pass it as a call's `preview`: the inbox shows it under the input.
+
+Your database credentials and data stay on your server: only the request
+(statement and preview) goes to the reviewers, and the realtime event that
+tells them about it carries neither.
+
+Estimate the rows on your side. With PostgreSQL and `pg`, `EXPLAIN` does not
+run the statement; a dry run in a rolled-back transaction gives the exact
+count but does run it (locks, triggers), so give it a timeout:
+
+```js
+import pg from 'pg';
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+
+export async function readOnly(sql) {
+  const db = await pool.connect();
+  try {
+    await db.query('BEGIN READ ONLY');
+    const { rows } = await db.query(sql);
+    await db.query('COMMIT');
+    return rows.slice(0, 200);
+  } catch (err) {
+    await db.query('ROLLBACK');
+    throw err;
+  } finally {
+    db.release();
+  }
+}
+
+export async function estimateRows(sql) {
+  const db = await pool.connect();
+  try {
+    await db.query('BEGIN');
+    await db.query("SET LOCAL statement_timeout = '5s'");
+    return (await db.query(sql)).rowCount; // or: EXPLAIN (FORMAT JSON) and read "Plan Rows"
+  } finally {
+    await db.query('ROLLBACK');
+    db.release();
+  }
+}
+
+// fingerprint: what the reviewer approved, when the statement reaches you
+// separately from the approval (hosted page, queue, another service).
+export async function runWrite(sql, fingerprint) {
+  if (fingerprint) await assertApprovedSql(sql, fingerprint);
+  return (await pool.query(sql)).rowCount;
+}
+```
+
+### Vercel AI SDK
+
+`needsApproval` takes a function, so only writes stop the run:
+
+```js
+import { tool } from 'ai';
+import { z } from 'zod';
+import { approvalCalls } from '@hibira-io/approvals/ai-sdk';
+import { classifySql, sqlFingerprint, sqlPreview } from '@hibira-io/approvals/sql';
+
+const tools = {
+  run_sql: tool({
+    description: 'Run one SQL statement on the shop database.',
+    inputSchema: z.object({ sql: z.string() }),
+    needsApproval: ({ sql }) => classifySql(sql) === 'write',
+    execute: async ({ sql }) => (classifySql(sql) === 'read' ? readOnly(sql) : runWrite(sql)),
+  }),
+};
+
+const result = await generateText({ model, tools, messages });
+const calls = await Promise.all(
+  approvalCalls(result).map(async (c) => {
+    const fingerprint = await sqlFingerprint(c.input.sql);
+    const rows = await estimateRows(c.input.sql);
+    return { ...c, preview: sqlPreview({ sql: c.input.sql, rows, fingerprint }) };
+  }),
+);
+if (calls.length) {
+  await approvals.request({ agent: 'Data assistant', title: 'Database change', calls, metadata: { chatId } });
+}
+```
+
+The AI SDK runs exactly the tool call the reviewer approved, matched by its
+id, so here the fingerprint is for the reviewer and your audit log. An
+**edit** reaches the model as a rejection with the reviewer's SQL,
+so the model calls `run_sql` again and the new statement gets its own
+preview and approval.
+
+### Mastra
+
+`requireApproval` takes a function too:
+
+```js
+const runSql = createTool({
+  id: 'run_sql',
+  inputSchema: z.object({ sql: z.string() }),
+  requireApproval: ({ sql }) => classifySql(sql) === 'write',
+  execute: async ({ sql }) => (classifySql(sql) === 'read' ? readOnly(sql) : runWrite(sql)),
+});
+
+const output = await agent.generate('Close the carts nobody touched in 30 days');
+if (output.finishReason === 'suspended') {
+  const { calls, metadata } = approvalCalls(output);
+  const withPreview = await Promise.all(
+    calls.map(async (c) => ({ ...c, preview: sqlPreview({ sql: c.input.sql, rows: await estimateRows(c.input.sql) }) })),
+  );
+  await approvals.request({ agent: 'Data assistant', title: 'Database change', calls: withPreview, metadata });
+}
+```
+
+### LangGraph (JS)
+
+Ask inside the node, and ask again when a reviewer edits the statement, so
+whatever runs was previewed and approved as it is:
+
+```js
+async function sqlNode(state) {
+  let sql = state.sql;
+  if (classifySql(sql) === 'read') return { result: await readOnly(sql) };
+  for (;;) {
+    const fingerprint = await sqlFingerprint(sql);
+    const preview = sqlPreview({ sql, rows: await estimateRows(sql), fingerprint });
+    const answer = interrupt(approval({ tool: 'run_sql', input: { sql }, preview, title: 'Database change' }));
+    if (!answer.approved) return { result: `not run: ${answer.reason ?? 'rejected'}` };
+    if (answer.input?.sql && answer.input.sql !== sql) {
+      sql = answer.input.sql; // edited: preview and ask again
+      continue;
+    }
+    return { result: await runWrite(sql, fingerprint) };
+  }
+}
+```
+
+LangGraph replays the node from the top on resume, so keep `estimateRows`
+free of side effects (EXPLAIN, or the rolled-back dry run). For Python, see
+[`python/`](python/README.md#gate-database-writes).
+
+### Without an inbox in your app
+
+Hibira can host the approval page instead: `POST /apps/APP_ID/approvals`
+(the [approvals HTTP API](https://hibira.io/use-cases/database-write-approvals))
+or the MCP tool `request_approval`, with the statement and preview as
+`details` and a private `channel`. The supervisor answers on a link or push
+notification, your server gets an `approval` event on that channel when
+they decide (no polling), reads the answer once to confirm it, checks the
+fingerprint and runs the statement.
 
 ## React
 
