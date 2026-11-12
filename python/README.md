@@ -52,6 +52,63 @@ if calls:
 `approvals.wait(id)` polls until a request is decided, for workers that keep
 the graph waiting in place.
 
+## Gate database writes
+
+`hibira_approvals.sql` matches `@hibira-io/approvals/sql`: reads run at
+once, writes wait for a reviewer who sees the exact statement, the
+estimated rows and its SHA-256. `classify_sql` treats several statements,
+data-modifying CTEs, `EXPLAIN ANALYZE` and anything unclear as writes; run
+reads on a read-only connection anyway, so a misjudged statement fails
+instead of writing. With psycopg 3 and PostgreSQL:
+
+```python
+import psycopg
+from langgraph.types import interrupt
+
+from hibira_approvals.langgraph import approval
+from hibira_approvals.sql import assert_approved_sql, classify_sql, sql_fingerprint, sql_preview
+
+DSN = "postgresql://..."
+
+
+def read_only(sql: str) -> list:
+    with psycopg.connect(DSN) as db:
+        db.read_only = True
+        return db.execute(sql).fetchmany(200)
+
+
+def estimate_rows(sql: str) -> int:
+    # A dry run: runs the statement and rolls it back. EXPLAIN avoids running it.
+    with psycopg.connect(DSN) as db:
+        with db.transaction(force_rollback=True):
+            db.execute("SET LOCAL statement_timeout = '5s'")
+            return db.execute(sql).rowcount
+
+
+def sql_node(state):
+    sql = state["sql"]
+    if classify_sql(sql) == "read":
+        return {"result": read_only(sql)}
+    while True:
+        fingerprint = sql_fingerprint(sql)
+        preview = sql_preview(sql, rows=estimate_rows(sql), fingerprint=fingerprint)
+        answer = interrupt(approval("run_sql", {"sql": sql}, title="Database change", preview=preview))
+        if not answer["approved"]:
+            return {"result": f"not run: {answer['reason'] or 'rejected'}"}
+        edited = (answer["input"] or {}).get("sql")
+        if edited and edited != sql:
+            sql = edited  # preview and ask again
+            continue
+        assert_approved_sql(sql, fingerprint)
+        with psycopg.connect(DSN) as db:
+            return {"result": db.execute(sql).rowcount}
+```
+
+`approval_calls()` carries each call's `preview` into the request, and the
+React and Vue inbox show it under the statement. LangGraph replays the node
+on resume, so `estimate_rows` must not change anything (the dry run rolls
+back; EXPLAIN never runs the statement).
+
 ## Routes for the inbox components
 
 ```python

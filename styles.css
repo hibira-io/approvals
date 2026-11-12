@@ -438,6 +438,15 @@
   border-color: var(--hb-ap-reject);
 }
 
+.hb-ap-preview-label {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hb-ap-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .hb-ap-reason {
   margin: 0;
   padding: 8px 10px;

@@ -163,7 +163,7 @@ export function createApprovals(options = {}) {
 
     /**
      * Opens a request for one or more tool calls and tells the reviewers.
-     * @param {{ calls: { id?: string, tool: string, input?: unknown }[], agent?: string, title?: string,
+     * @param {{ calls: { id?: string, tool: string, input?: unknown, preview?: string }[], agent?: string, title?: string,
      *   metadata?: object, expiresIn?: number, id?: string }} input
      */
     async request(input) {
@@ -188,6 +188,7 @@ export function createApprovals(options = {}) {
             id: String(c.id ?? `call_${i + 1}`),
             tool: c.tool,
             input: c.input ?? null,
+            ...(typeof c.preview === 'string' && c.preview ? { preview: c.preview.slice(0, 4000) } : {}),
             decision: null,
             edited_input: null,
             reason: null,

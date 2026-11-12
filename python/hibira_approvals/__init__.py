@@ -254,7 +254,7 @@ class Approvals:
         expires_in: Optional[timedelta] = None,
         id: Optional[str] = None,
     ) -> dict:
-        """Opens a request for one or more tool calls ``{"id", "tool", "input"}`` and tells the reviewers."""
+        """Opens a request for one or more tool calls ``{"id", "tool", "input", "preview"?}`` and tells the reviewers."""
         calls = list(calls)
         if not calls:
             raise ValueError("request() needs at least one call.")
@@ -262,11 +262,16 @@ class Approvals:
         for i, c in enumerate(calls):
             if not isinstance(c.get("tool"), str):
                 raise ValueError(f"Call {i} needs a tool name.")
+            item = {
+                "id": str(c.get("id") or f"call_{i + 1}"),
+                "tool": c["tool"],
+                "input": c.get("input"),
+            }
+            if isinstance(c.get("preview"), str) and c["preview"]:
+                item["preview"] = c["preview"][:4000]
             items.append(
                 {
-                    "id": str(c.get("id") or f"call_{i + 1}"),
-                    "tool": c["tool"],
-                    "input": c.get("input"),
+                    **item,
                     "decision": None,
                     "edited_input": None,
                     "reason": None,

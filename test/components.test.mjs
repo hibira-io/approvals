@@ -174,3 +174,34 @@ test('live update: another reviewer decides', async () => {
   assert.match(root.textContent, /by Bo/);
   await act(async () => app.unmount());
 });
+
+test('React card shows a call preview, and hides it once the input is edited', async () => {
+  const React = await import('react');
+  const { createRoot } = await import('react-dom/client');
+  const { act } = React;
+  const { ApprovalCard } = await import('../react.js');
+  const bus = fakeBus();
+  const approvals = createApprovals({ pusher: bus.server });
+  const handle = approvals.handler({ basePath: '/api/approvals', getUser: () => ({ id: '1', name: 'Ann' }) });
+  const client = createApprovalsClient({
+    endpoint: '/api/approvals',
+    pusher: bus.pusher,
+    fetch: (url, init) => handle(new Request(new URL(url, 'http://app.test'), init)),
+  });
+  const r = await approvals.request({
+    title: 'Clean up old carts',
+    calls: [{ id: 'a', tool: 'run_sql', input: { sql: 'DELETE FROM carts' }, preview: 'Estimated rows: 37' }],
+  });
+  const root = document.createElement('div');
+  const app = createRoot(root);
+  await act(async () => app.render(React.createElement(ApprovalCard, { client, id: r.id, locale: 'zh-TW' })));
+  await act(tick);
+  assert.equal(root.querySelector('.hb-ap-preview-label').textContent, '預覽');
+  assert.equal(root.querySelector('.hb-ap-preview').textContent, 'Estimated rows: 37');
+  await approvals.decide(r.id, { a: { decision: 'edit', input: { sql: 'DELETE FROM carts WHERE id = 1' } } }, { by: 'Ann' });
+  await act(async () => client.get?.(r.id));
+  await act(tick);
+  await act(tick);
+  assert.equal(root.querySelector('.hb-ap-preview'), null);
+  await act(async () => app.unmount());
+});
