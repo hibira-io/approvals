@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Go module `github.com/hibira-io/approvals/go` (tag `go/v0.1.0`):
+  `Client.Request`, `Get` (with `wait`), `Wait`, `Reply` for the hosted
+  approvals API, and `VerifyCallback` for `callback_url` deliveries and
+  workspace webhooks. No dependencies.
+
 ## 0.2.0
 
 - `@hibira-io/approvals/sql` (and `hibira_approvals.sql` in Python 0.2.0):
