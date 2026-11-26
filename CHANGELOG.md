@@ -2,10 +2,9 @@
 
 ## Unreleased
 
-- Go module `github.com/hibira-io/approvals/go` (tag `go/v0.1.0`):
-  `Client.Request`, `Get` (with `wait`), `Wait`, `Reply` for the hosted
-  approvals API, and `VerifyCallback` for `callback_url` deliveries and
-  workspace webhooks. No dependencies.
+- The Go package lives in [hibira-io/go](https://github.com/hibira-io/go) as
+  `github.com/hibira-io/go/approvals`. The untagged `go/` folder here is
+  removed.
 
 ## 0.2.0
 

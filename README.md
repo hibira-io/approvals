@@ -18,7 +18,7 @@ else is looking, and the agent carries on where it stopped.
   fingerprint, so approving one statement never runs another.
 - **One protocol** ([PROTOCOL.md](PROTOCOL.md)) shared with the
   [Python package](python/) (LangGraph Python + FastAPI), the
-  [Go module](go/) (hosted approvals API),
+  [Go package](https://github.com/hibira-io/go/tree/main/approvals) (hosted approvals API),
   [filament-approvals](https://github.com/hibira-io/filament-approvals)
   (Laravel AI SDK) and the Hibira MCP server's `request_approval` tool. A
   React inbox can show requests from any of them.
@@ -423,7 +423,7 @@ Vietnamese (`locale`); override single strings with `labels`.
 - `approvals.authorize(socketId, channel, user)` if you serve channel
   authorization yourself.
 
-From Go, [`github.com/hibira-io/approvals/go`](go/) asks through the hosted
+From Go, [`github.com/hibira-io/go/approvals`](https://github.com/hibira-io/go/tree/main/approvals) asks through the hosted
 approvals API (Hibira hosts the answer page) and verifies decision callbacks.
 
 ## License

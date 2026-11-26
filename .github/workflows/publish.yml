@@ -3,8 +3,7 @@
 #   (v0.2.0-beta.1) go to the "next" dist-tag. Needs the NPM_TOKEN secret.
 # - Tag python-v<version> (e.g. python-v0.1.0): PyPI, version from
 #   python/pyproject.toml, through PyPI trusted publishing (no token).
-# - The Go module (go/) needs no release: push the plain tag go/v<version>
-#   (e.g. go/v0.1.0) and the Go proxy serves it.
+# - The Go package is released from hibira-io/go.
 name: publish
 on:
   release:
